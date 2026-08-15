@@ -1,3 +1,0 @@
-/api/create-order   /.netlify/functions/create-order  200
-/api/verify-payment /.netlify/functions/verify-payment 200
-/*                  /index.html                        200
