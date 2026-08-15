@@ -21,8 +21,8 @@ export interface RazorpayPaymentFailedResponse {
 }
 
 export interface CreateOrderParams {
-  amount: number; // in paise (e.g. 50000 = ₹500.00)
-  currency?: string; // default 'INR'
+  amount: number;
+  currency?: string;
   receipt?: string;
   notes?: Record<string, string>;
 }
@@ -53,7 +53,7 @@ export interface VerifyPaymentResponse {
 
 export interface RazorpayCheckoutOptions {
   key?: string;
-  amount: number; // in paise
+  amount: number;
   currency?: string;
   name: string;
   description?: string;
@@ -89,7 +89,6 @@ export const loadRazorpayScript = (): Promise<boolean> => {
       return;
     }
 
-    // Check if script element already exists
     const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
     if (existingScript) {
       existingScript.addEventListener('load', () => resolve(true));
@@ -110,38 +109,67 @@ export const loadRazorpayScript = (): Promise<boolean> => {
 };
 
 /**
- * Creates an order on the backend via POST /api/create-order
+ * Creates a Razorpay order on the backend via POST /api/create-order
+ * Performs server-side price verification and content-type checking
  */
 export const createRazorpayOrder = async (params: CreateOrderParams): Promise<CreateOrderResponse> => {
   if (params.amount < 100) {
     throw new Error('Minimum order amount is 100 paise (₹1.00)');
   }
 
-  const response = await fetch('/api/create-order', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      amount: Math.round(params.amount),
-      currency: params.currency || 'INR',
-      receipt: params.receipt || `rcpt_${Date.now()}`,
-      notes: params.notes || {}
-    })
-  });
+  let response: Response;
+  try {
+    response = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        amount: params.amount,
+        currency: params.currency || 'INR',
+        courseId: params.notes?.courseId || 'course_income_from_ai',
+        couponCode: params.notes?.couponCode || '',
+        receipt: params.receipt || `rcpt_${Date.now()}`,
+        notes: params.notes || {}
+      })
+    });
+  } catch (netErr: any) {
+    console.error('Payment API network connection error:', netErr);
+    throw new Error('Payment service is temporarily unavailable. Please check your network connection.');
+  }
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') || '';
 
-  if (!response.ok || !data.order_id) {
-    throw new Error(data.error || `Failed to create order (HTTP ${response.status})`);
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`Payment API failed (${response.status}): ${text.slice(0, 300)}`);
+    throw new Error('Payment service is temporarily unavailable. Please try again in a moment.');
+  }
+
+  if (!contentType.includes('application/json')) {
+    const text = await response.text();
+    console.error(`Payment API returned non-JSON response: ${text.slice(0, 300)}`);
+    throw new Error('Payment service is temporarily unavailable. Please try again in a moment.');
+  }
+
+  let data: any;
+  try {
+    data = await response.json();
+  } catch (parseErr: any) {
+    console.error('Failed to parse JSON response:', parseErr);
+    throw new Error('Payment service is temporarily unavailable. Please try again in a moment.');
+  }
+
+  if (!data || (!data.order_id && !data.id)) {
+    throw new Error(data?.error || 'Failed to create payment order on server.');
   }
 
   return {
     success: true,
     order_id: data.order_id || data.id,
     id: data.order_id || data.id,
-    amount: data.amount,
-    currency: data.currency,
+    amount: data.amount || params.amount,
+    currency: data.currency || params.currency || 'INR',
     receipt: data.receipt
   };
 };
@@ -150,18 +178,43 @@ export const createRazorpayOrder = async (params: CreateOrderParams): Promise<Cr
  * Verifies payment signature on the backend via POST /api/verify-payment
  */
 export const verifyRazorpayPayment = async (params: VerifyPaymentParams): Promise<VerifyPaymentResponse> => {
-  const response = await fetch('/api/verify-payment', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(params)
-  });
+  let response: Response;
+  try {
+    response = await fetch('/api/verify-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    });
+  } catch (netErr: any) {
+    console.error('Payment verification network error:', netErr);
+    throw new Error('Payment verification service is temporarily unavailable.');
+  }
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') || '';
 
-  if (!response.ok || !data.success) {
-    throw new Error(data.error || 'Payment signature verification failed');
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`Verify API failed (${response.status}): ${text.slice(0, 300)}`);
+    throw new Error('Payment verification failed on server.');
+  }
+
+  if (!contentType.includes('application/json')) {
+    const text = await response.text();
+    console.error(`Verify API returned non-JSON response: ${text.slice(0, 300)}`);
+    throw new Error('Payment verification failed on server.');
+  }
+
+  let data: any;
+  try {
+    data = await response.json();
+  } catch (parseErr) {
+    throw new Error('Payment verification failed on server.');
+  }
+
+  if (!data || !data.success) {
+    throw new Error(data?.error || 'Payment signature verification failed');
   }
 
   return data;
@@ -170,7 +223,7 @@ export const verifyRazorpayPayment = async (params: VerifyPaymentParams): Promis
 /**
  * Initiates Razorpay Standard Checkout Flow:
  * 1. Loads checkout.js SDK
- * 2. Creates order on backend (if order_id not already provided)
+ * 2. Creates order on backend securely
  * 3. Launches Razorpay payment modal
  * 4. Verifies HMAC-SHA256 signature on backend upon payment success
  */
@@ -193,7 +246,6 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
     throw error;
   }
 
-  // 1. Create order on backend if order_id is not already provided
   let orderId = options.order_id;
   let orderAmount = options.amount;
   let orderCurrency = options.currency || 'INR';
@@ -205,16 +257,17 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
         currency: options.currency || 'INR',
         notes: options.notes
       });
-      orderId = order.order_id;
-      orderAmount = order.amount;
-      orderCurrency = order.currency;
+      if (order.order_id) {
+        orderId = order.order_id;
+      }
+      if (order.amount) orderAmount = order.amount;
+      if (order.currency) orderCurrency = order.currency;
     } catch (err: any) {
       if (options.onError) options.onError(err);
       throw err;
     }
   }
 
-  // 2. Configure Razorpay Standard Checkout modal options
   const rzpOptions: any = {
     key: razorpayKey,
     amount: Math.round(orderAmount),
@@ -240,19 +293,17 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
     },
     handler: async (response: RazorpayPaymentSuccessResponse) => {
       try {
-        // 3. Send razorpay_order_id, razorpay_payment_id, and razorpay_signature to backend verification endpoint
         const verifyResult = await verifyRazorpayPayment({
           razorpay_order_id: response.razorpay_order_id,
           razorpay_payment_id: response.razorpay_payment_id,
           razorpay_signature: response.razorpay_signature
         });
 
-        // 4. Verification successful, trigger callback
         options.onSuccess(response, verifyResult);
       } catch (err: any) {
-        console.error('Payment signature verification error:', err);
+        console.error('Payment verification error:', err);
         if (options.onError) {
-          options.onError(new Error(err.message || 'Payment verification failed on server.'));
+          options.onError(new Error(err.message || 'Payment signature verification failed on server.'));
         }
       }
     }
@@ -261,7 +312,6 @@ export const openRazorpayCheckout = async (options: RazorpayCheckoutOptions): Pr
   try {
     const razorpayInstance = new (window as any).Razorpay(rzpOptions);
 
-    // Listen for payment failure event
     razorpayInstance.on('payment.failed', (response: RazorpayPaymentFailedResponse) => {
       console.error('Razorpay payment failed:', response.error);
       const errMsg = response.error?.description || response.error?.reason || 'Payment failed';

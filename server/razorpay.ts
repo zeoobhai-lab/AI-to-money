@@ -27,20 +27,26 @@ export interface VerifyPaymentInput {
  * @param data { amount, currency, receipt, notes }
  */
 export async function createOrder(data: CreateOrderInput): Promise<HandlerResult> {
-  const { amount, currency = 'INR', receipt, notes = {} } = data || {};
+  const { amount: inputAmount, currency = 'INR', receipt, notes = {} } = data || {};
+
+  let amount = inputAmount;
+
+  if (amount === undefined || amount === null) {
+    amount = 129900; // Fallback default
+  }
 
   // Validate amount (in paise, must be >= 100 paise)
-  if (amount === undefined || amount === null || typeof amount !== 'number' || isNaN(amount)) {
+  if (typeof amount !== 'number' || isNaN(amount)) {
     return {
       status: 400,
-      body: { error: 'Invalid amount. Amount must be a valid number in paise.' }
+      body: { success: false, error: 'Invalid amount. Amount must be a valid number in paise.' }
     };
   }
 
   if (amount < 100) {
     return {
       status: 400,
-      body: { error: 'Minimum order amount is 100 paise (₹1.00).' }
+      body: { success: false, error: 'Minimum order amount is 100 paise (₹1.00).' }
     };
   }
 
@@ -51,7 +57,7 @@ export async function createOrder(data: CreateOrderInput): Promise<HandlerResult
     console.error('Razorpay credentials missing. RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET not set in environment.');
     return {
       status: 401,
-      body: { error: 'Razorpay API credentials not configured on server.' }
+      body: { success: false, error: 'Razorpay API credentials not configured on server.' }
     };
   }
 
@@ -84,10 +90,11 @@ export async function createOrder(data: CreateOrderInput): Promise<HandlerResult
     };
   } catch (err: any) {
     console.error('Razorpay createOrder API error:', err);
-    const statusCode = err?.statusCode || (err?.error?.code === 'BAD_REQUEST_ERROR' ? 400 : 500);
+    const statusCode = err?.statusCode === 401 || err?.status === 401 ? 401 : (err?.statusCode || (err?.error?.code === 'BAD_REQUEST_ERROR' ? 400 : 500));
     return {
       status: statusCode,
       body: {
+        success: false,
         error: err?.error?.description || err?.message || 'Failed to create Razorpay order',
         code: err?.error?.code || 'ORDER_CREATION_FAILED'
       }
