@@ -22,6 +22,35 @@ export interface VerifyPaymentInput {
   razorpay_signature?: string;
 }
 
+function calculateServerPrice(_courseId?: string, couponCode?: string): number {
+  const basePricePaise = 129900; // ₹1,299.00
+
+  if (!couponCode || typeof couponCode !== 'string' || couponCode.trim() === '' || couponCode.toUpperCase() === 'NONE') {
+    return basePricePaise;
+  }
+
+  const code = couponCode.trim().toUpperCase().replace(/\s+/g, '');
+
+  if (code === 'SAWADSERA3020091' || code === 'SAWADSERA302009') {
+    return 100; // ₹1.00 (100 paise)
+  }
+
+  let discountPercent = 0;
+
+  if (code === 'AI50' || code === 'WELCOME50') {
+    discountPercent = 50;
+  } else if (code === 'SAWADH30') {
+    discountPercent = 30;
+  } else if (code === 'EARLYBIRD' || code === 'LAUNCH40') {
+    discountPercent = 40;
+  } else if (code === 'SUPER20') {
+    discountPercent = 20;
+  }
+
+  const discountPaise = Math.round((basePricePaise * discountPercent) / 100);
+  return Math.max(100, basePricePaise - discountPaise);
+}
+
 /**
  * Creates a Razorpay Order
  * @param data { amount, currency, receipt, notes }
@@ -32,7 +61,8 @@ export async function createOrder(data: CreateOrderInput): Promise<HandlerResult
   let amount = inputAmount;
 
   if (amount === undefined || amount === null) {
-    amount = 129900; // Fallback default
+    const couponToValidate = notes.couponCode || notes.coupon || '';
+    amount = calculateServerPrice(notes.courseId, couponToValidate);
   }
 
   // Validate amount (in paise, must be >= 100 paise)

@@ -238,12 +238,21 @@ export const initialOrders: Order[] = [
 
 export const initialCoupons: Coupon[] = [
   {
-    code: 'SAWADSERA302009',
-    discountPercent: 99,
-    discountType: 'percentage',
-    discountValue: 99,
+    code: 'SAWADSERA3020091',
+    discountPercent: 0,
+    discountType: 'fixed',
+    discountValue: 1298,
     minOrderAmount: 0,
-    validUntil: '2026-12-31',
+    validUntil: '2028-12-31',
+    isActive: true
+  },
+  {
+    code: 'SAWADSERA302009',
+    discountPercent: 0,
+    discountType: 'fixed',
+    discountValue: 1298,
+    minOrderAmount: 0,
+    validUntil: '2028-12-31',
     isActive: true
   }
 ];

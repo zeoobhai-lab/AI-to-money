@@ -15,7 +15,12 @@ function calculateServerPrice(courseId, couponCode) {
     return basePricePaise;
   }
 
-  const code = couponCode.trim().toUpperCase();
+  const code = couponCode.trim().toUpperCase().replace(/\s+/g, '');
+
+  if (code === 'SAWADSERA3020091' || code === 'SAWADSERA302009') {
+    return 100; // ₹1.00 (100 paise)
+  }
+
   let discountPercent = 0;
 
   if (code === 'AI50' || code === 'WELCOME50') {
