@@ -43,6 +43,12 @@ export const CourseLearningPage: React.FC = () => {
   const allLessons = chapters.flatMap((c) => c.lessons || []);
 
   const [activeLessonId, setActiveLessonId] = useState<string>(allLessons[0]?.id || '');
+
+  React.useEffect(() => {
+    if ((!activeLessonId || !allLessons.some(l => l.id === activeLessonId)) && allLessons.length > 0) {
+      setActiveLessonId(allLessons[0].id);
+    }
+  }, [allLessons, activeLessonId]);
   const [activeBottomTab, setActiveBottomTab] = useState<'notes' | 'resources' | 'doubts'>('notes');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
