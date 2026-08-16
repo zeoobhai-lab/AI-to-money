@@ -1,6 +1,10 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import dotenv from 'dotenv'
+
+dotenv.config()
+
 import { createOrder, verifyPayment } from './server/razorpay.ts'
 
 function razorpayApiPlugin(): Plugin {

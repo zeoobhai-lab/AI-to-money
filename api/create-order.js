@@ -27,6 +27,6 @@ export default async function handler(req, res) {
     return res.status(result.status || 200).json(result.body || result);
   } catch (err) {
     console.error('API /api/create-order error:', err);
-    return res.status(500).json({ success: false, error: 'Payment service is temporarily unavailable. Please try again in a moment.' });
+    return res.status(500).json({ success: false, error: err?.message || 'Payment service is temporarily unavailable.' });
   }
 }

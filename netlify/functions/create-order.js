@@ -33,7 +33,7 @@ export async function handler(event) {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ success: false, error: 'Payment service is temporarily unavailable. Please try again in a moment.' })
+      body: JSON.stringify({ success: false, error: err?.message || 'Payment service is temporarily unavailable.' })
     };
   }
 }
