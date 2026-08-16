@@ -56,19 +56,18 @@ export async function createOrder(data: CreateOrderInput): Promise<HandlerResult
   const generatedReceipt = receipt ? String(receipt).slice(0, 40) : `rcpt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
   if (!key_id || !key_secret) {
-    console.warn('Razorpay credentials missing. Using fallback test order for checkout.');
-    const fallbackOrderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    console.warn('Razorpay credentials missing on server. Direct checkout mode enabled.');
     return {
       status: 200,
       body: {
         success: true,
-        order_id: fallbackOrderId,
-        id: fallbackOrderId,
+        order_id: '',
+        id: '',
         amount: Math.round(amount),
         currency: currency || 'INR',
         receipt: generatedReceipt,
         status: 'created',
-        is_fallback: true
+        is_fallback: false
       }
     };
   }
@@ -102,25 +101,6 @@ export async function createOrder(data: CreateOrderInput): Promise<HandlerResult
     };
   } catch (err: any) {
     console.error('Razorpay createOrder API error:', err);
-    // In test mode or when using test credentials, return fallback order if API fails
-    if (key_id?.startsWith('rzp_test_')) {
-      console.warn('Razorpay API error in test mode. Falling back to test order ID.');
-      const fallbackOrderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-      return {
-        status: 200,
-        body: {
-          success: true,
-          order_id: fallbackOrderId,
-          id: fallbackOrderId,
-          amount: Math.round(amount),
-          currency: currency || 'INR',
-          receipt: generatedReceipt,
-          status: 'created',
-          is_fallback: true
-        }
-      };
-    }
-
     const statusCode = err?.statusCode === 401 || err?.status === 401 ? 401 : (err?.statusCode || (err?.error?.code === 'BAD_REQUEST_ERROR' ? 400 : 500));
     return {
       status: statusCode,
