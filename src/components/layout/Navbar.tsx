@@ -117,7 +117,7 @@ export const Navbar: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>Admin Suite</span>
+                <span>Admin Control Panel</span>
               </button>
             )}
           </nav>
