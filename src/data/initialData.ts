@@ -174,7 +174,7 @@ export const flagshipCourse: Course = {
   createdAt: '2026-01-10'
 };
 
-export const initialCourses: Course[] = [];
+export const initialCourses: Course[] = [flagshipCourse];
 
 export const initialStudyMaterials: StudyMaterial[] = [];
 

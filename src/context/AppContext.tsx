@@ -214,7 +214,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [courses, setCourses] = useState<Course[]>(() => {
     const saved = localStorage.getItem('aimastery_courses');
-    return saved ? JSON.parse(saved) : initialCourses;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return [flagshipCourse];
   });
 
   const [materials, setMaterials] = useState<StudyMaterial[]>(() => {
@@ -607,8 +613,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateCourse = (id: string, updatedCourse: Partial<Course>) => {
-    setCourses((prev) => prev.map((c) => (c.id === id ? { ...c, ...updatedCourse } : c)));
-    showToast('Course updated');
+    setCourses((prev) => {
+      const exists = prev.some((c) => c.id === id);
+      if (!exists) {
+        return [{ ...flagshipCourse, ...updatedCourse, id }, ...prev];
+      }
+      return prev.map((c) => (c.id === id ? { ...c, ...updatedCourse } : c));
+    });
+    showToast('Course updated & synced across platform');
   };
 
   const deleteCourse = (id: string) => {
