@@ -13,6 +13,7 @@ import { CourseLearningPage } from './pages/student/CourseLearningPage';
 import { StudyMaterialPage } from './pages/student/StudyMaterialPage';
 import { TestQuizPage } from './pages/student/TestQuizPage';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
+import { WhatsAppGroupModal } from './components/ui/WhatsAppGroupModal';
 import { Sparkles, CheckCircle2, AlertCircle, AlertTriangle, Info, Lock } from 'lucide-react';
 
 const ProtectedDashboardWrapper: React.FC<{ children: React.ReactNode; onOpenAuth: () => void }> = ({ children, onOpenAuth }) => {
@@ -57,7 +58,7 @@ const ProtectedDashboardWrapper: React.FC<{ children: React.ReactNode; onOpenAut
 };
 
 const MainAppContent: React.FC = () => {
-  const { activeTab, toastMessage, toastData, currentUser, currentRole, hasActivePurchase } = useApp();
+  const { activeTab, toastMessage, toastData, currentUser, currentRole, hasActivePurchase, isWhatsAppModalOpen, closeWhatsAppModal, whatsAppModalData } = useApp();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
 
@@ -154,6 +155,16 @@ const MainAppContent: React.FC = () => {
 
       {/* Footer */}
       {showFooter && <Footer />}
+
+      {/* Global WhatsApp Group Modal */}
+      <WhatsAppGroupModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={closeWhatsAppModal}
+        transactionId={whatsAppModalData?.transactionId}
+        amountPaid={whatsAppModalData?.amount}
+        productTitle={whatsAppModalData?.title || 'Purchased File / Course'}
+        whatsappGroupUrl="https://chat.whatsapp.com/D7KO9Sr39oOJ1RDxM7OvqY"
+      />
 
       {/* Auth Modal */}
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />

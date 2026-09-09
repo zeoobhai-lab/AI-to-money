@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { MessageCircle, CheckCircle2, Copy, Check, ExternalLink, ArrowRight, AlertTriangle } from 'lucide-react';
+import { MessageCircle, CheckCircle2, Copy, Check, ExternalLink, ArrowRight, AlertTriangle, X } from 'lucide-react';
 
-interface WhatsAppGroupModalProps {
+export interface WhatsAppGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onProceed?: () => void;
@@ -40,11 +40,24 @@ export const WhatsAppGroupModal: React.FC<WhatsAppGroupModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+    <div 
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in"
+      style={{ zIndex: 99999 }}
+    >
       <div 
-        className="relative w-full max-w-lg bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 border border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-emerald-500/10 text-white space-y-5 animate-scale-up"
+        className="relative w-full max-w-lg bg-gradient-to-b from-[#0e1626] via-[#090f1d] to-[#050912] border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-emerald-500/20 text-white space-y-5 animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close Button */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-5 right-5 p-2 rounded-full bg-gray-800/80 hover:bg-gray-700 text-gray-400 hover:text-white transition-colors cursor-pointer"
+          title="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         {/* Ambient Top Glow */}
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -56,7 +69,7 @@ export const WhatsAppGroupModal: React.FC<WhatsAppGroupModalProps> = ({
           </div>
 
           {/* Requested Popup Title */}
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white capitalize">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white capitalize leading-tight">
             whatsapp group for all furthur messages
           </h2>
 
@@ -67,7 +80,7 @@ export const WhatsAppGroupModal: React.FC<WhatsAppGroupModalProps> = ({
 
         {/* Purchase Summary Details (if available) */}
         {(transactionId || amountPaid !== undefined) && (
-          <div className="bg-gray-800/60 border border-gray-700/60 rounded-2xl p-3.5 text-xs space-y-1.5">
+          <div className="bg-gray-900/80 border border-gray-800 rounded-2xl p-3.5 text-xs space-y-1.5">
             {transactionId && (
               <div className="flex justify-between items-center text-gray-400">
                 <span>Payment Reference</span>
@@ -103,7 +116,7 @@ export const WhatsAppGroupModal: React.FC<WhatsAppGroupModalProps> = ({
             <button
               type="button"
               onClick={handleCopy}
-              className="px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-3.5 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
               title="Copy group invite link"
             >
               {copied ? (
@@ -122,10 +135,10 @@ export const WhatsAppGroupModal: React.FC<WhatsAppGroupModalProps> = ({
         </div>
 
         {/* Disclaimer in RED COLOUR requested by user */}
-        <div className="p-3.5 rounded-2xl bg-red-950/40 border-2 border-red-500/60 text-red-400 text-xs text-center flex items-center justify-center gap-2 shadow-lg shadow-red-950/30 animate-pulse">
-          <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-          <span className="font-extrabold tracking-wide text-red-300">
-            Disclaimer: please join this channel for furthur leactures and sessions
+        <div className="p-3.5 rounded-2xl bg-red-950/60 border-2 border-red-500 text-red-400 text-xs text-center flex items-center justify-center gap-2 shadow-lg shadow-red-950/50 animate-pulse">
+          <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+          <span className="font-extrabold tracking-wide text-red-400 text-[13px]">
+            please join this channel for furthur leactures and sessions
           </span>
         </div>
 

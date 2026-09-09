@@ -13,7 +13,8 @@ export const CheckoutPage: React.FC = () => {
     enrollInCourse,
     validateCoupon,
     setActiveTab,
-    showToast
+    showToast,
+    openWhatsAppModal
   } = useApp();
 
   const [couponInput, setCouponInput] = useState('');
@@ -99,21 +100,19 @@ export const CheckoutPage: React.FC = () => {
         onSuccess: (paymentData, verifyData) => {
           setIsProcessing(false);
           console.log('Payment verified successfully:', verifyData);
-          const success = enrollInCourse(flagship.id, {
+          enrollInCourse(flagship.id, {
             amountPaid: finalPrice,
             couponCode: appliedCoupon?.code,
             paymentMethod: 'Razorpay',
             userPhone: userPhone,
             transactionId: paymentData.razorpay_payment_id
           });
-          if (success) {
-            showToast(`Payment Verified & Successful! Payment ID: ${paymentData.razorpay_payment_id}`);
-            setCompletedPayment({
-              id: paymentData.razorpay_payment_id,
-              amount: finalPrice
-            });
-            setIsWhatsAppModalOpen(true);
-          }
+          showToast('Payment Verified & Successful! Payment ID: ' + paymentData.razorpay_payment_id);
+          openWhatsAppModal({
+            title: flagship.title,
+            amount: finalPrice,
+            transactionId: paymentData.razorpay_payment_id
+          });
         },
         onError: (err: any) => {
           setIsProcessing(false);

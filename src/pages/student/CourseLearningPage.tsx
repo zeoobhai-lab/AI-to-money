@@ -36,7 +36,8 @@ export const CourseLearningPage: React.FC = () => {
     isLessonCompleted,
     getCourseProgressPercentage,
     setActiveTab,
-    showToast
+    showToast,
+    openWhatsAppModal
   } = useApp();
 
   const chapters = flagship.chapters || [];
@@ -597,7 +598,7 @@ export const CourseLearningPage: React.FC = () => {
                             href={mat.fileUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="px-3.5 py-2 rounded-xl bg-amber-400 text-black text-xs font-black hover:bg-amber-300 flex items-center gap-1.5 shadow"
+                            onClick={() => openWhatsAppModal({ title: 'Course File: ' + mat.title })} className="px-3.5 py-2 rounded-xl bg-amber-400 text-black text-xs font-black hover:bg-amber-300 flex items-center gap-1.5 shadow cursor-pointer"
                           >
                             <Download className="w-4 h-4" />
                             <span>Download PDF</span>

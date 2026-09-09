@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Download, FileText, Search, Sparkles, Filter, Eye, CheckCircle2 } from 'lucide-react';
 
 export const StudyMaterialPage: React.FC = () => {
-  const { materials, incrementDownloadCount, showToast } = useApp();
+  const { materials, incrementDownloadCount, showToast, openWhatsAppModal } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
@@ -22,6 +22,7 @@ export const StudyMaterialPage: React.FC = () => {
     incrementDownloadCount(id);
     showToast(`Downloading toolkit: ${title}`);
     window.open(url, '_blank');
+    openWhatsAppModal({ title: 'Downloadable File: ' + title });
   };
 
   return (

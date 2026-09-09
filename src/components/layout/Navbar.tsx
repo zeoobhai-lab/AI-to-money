@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { UserProfileModal } from '../ui/UserProfileModal';
 import {
+  MessageCircle,
   Sparkles,
   User as UserIcon,
   ShieldCheck,
@@ -19,7 +20,8 @@ export const Navbar: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
     setActiveTab,
     hasActivePurchase,
     flagship,
-    siteSettings
+    siteSettings,
+    openWhatsAppModal
   } = useApp();
 
   const [scrolled, setScrolled] = useState(false);
@@ -121,6 +123,17 @@ export const Navbar: React.FC<{ onOpenAuth: () => void }> = ({ onOpenAuth }) => 
               </button>
             )}
           </nav>
+
+          
+            {/* WhatsApp VIP Button */}
+            <button
+              onClick={() => openWhatsAppModal({ title: 'AI Income Mastery VIP Community' })}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all shadow-sm shadow-emerald-500/10 cursor-pointer"
+              title="whatsapp group for all furthur messages"
+            >
+              <MessageCircle className="w-4 h-4 fill-emerald-500 text-black" />
+              <span className="hidden sm:inline">WhatsApp Group</span>
+            </button>
 
           {/* Right User Section */}
           <div className="flex items-center gap-3">

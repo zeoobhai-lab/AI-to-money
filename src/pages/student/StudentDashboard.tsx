@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Announcement, ActionShortcutCard } from '../../types';
 import { PhotoUploadModal } from '../../components/ui/PhotoUploadModal';
 import {
+  MessageCircle,
   GraduationCap,
   PlayCircle,
   BookOpen,
@@ -41,7 +42,8 @@ export const StudentDashboard: React.FC = () => {
     setActiveTab,
     updateUserProfile,
     uploadToSupabaseStorage,
-    showToast
+    showToast,
+    openWhatsAppModal
   } = useApp();
 
   const [studentTab, setStudentTab] = useState<'overview' | 'modules' | 'announcements'>('overview');
@@ -213,6 +215,48 @@ export const StudentDashboard: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
+      
+      {/* Official WhatsApp Group Banner */}
+      <div className="glass-panel p-6 rounded-3xl border-2 border-emerald-500/50 bg-gradient-to-r from-emerald-950/60 via-gray-900 to-gray-950 flex flex-col md:flex-row items-center justify-between gap-5 shadow-2xl shadow-emerald-500/10">
+        <div className="flex items-center gap-4 text-center md:text-left">
+          <div className="p-3.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shrink-0">
+            <MessageCircle className="w-8 h-8 fill-emerald-500 text-gray-950" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-center md:justify-start gap-2">
+              <span className="text-[11px] font-bold text-emerald-400 uppercase font-mono tracking-wider">VIP Student Community</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-extrabold uppercase">Mandatory</span>
+            </div>
+            <h3 className="font-black text-white text-lg sm:text-xl capitalize">
+              whatsapp group for all furthur messages
+            </h3>
+            <p className="text-xs sm:text-sm text-red-400 font-extrabold flex items-center justify-center md:justify-start gap-1.5 pt-0.5">
+              <span>⚠️</span>
+              <span>please join this channel for furthur leactures and sessions</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 shrink-0 w-full md:w-auto">
+          <button
+            type="button"
+            onClick={() => openWhatsAppModal({ title: 'AI Income Mastery VIP Community' })}
+            className="w-full md:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-400 hover:to-green-500 text-white font-black text-xs sm:text-sm shadow-xl shadow-green-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer transform hover:scale-105"
+          >
+            <span>Open WhatsApp Popup</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+          <a
+            href="https://chat.whatsapp.com/D7KO9Sr39oOJ1RDxM7OvqY"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex px-4 py-3 rounded-2xl bg-gray-800 hover:bg-gray-700 text-emerald-400 border border-emerald-500/30 text-xs font-bold items-center gap-1.5 transition-colors"
+          >
+            <span>Direct Link ↗</span>
+          </a>
+        </div>
+      </div>
+
       {/* Welcome Header & Profile Photo Upload */}
       <div className="glass-panel p-8 rounded-3xl border border-purple-500/30 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-purple-500/10">
         

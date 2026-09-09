@@ -33,6 +33,10 @@ import {
 import { supabase, SUPABASE_CONFIG, SUPABASE_STORAGE_BUCKET, CouponValidationResult } from '../lib/supabase';
 
 interface AppContextType {
+  isWhatsAppModalOpen: boolean;
+  whatsAppModalData: { title?: string; amount?: number; transactionId?: string } | null;
+  openWhatsAppModal: (data?: { title?: string; amount?: number; transactionId?: string }) => void;
+  closeWhatsAppModal: () => void;
   supabaseConnected: boolean;
   supabaseMessage: string;
   supabaseConfig: typeof SUPABASE_CONFIG;
@@ -335,6 +339,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [coupons]);
 
   const [hasActivePurchase, setHasActivePurchase] = useState<boolean>(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState<boolean>(false);
+  const [whatsAppModalData, setWhatsAppModalData] = useState<{ title?: string; amount?: number; transactionId?: string } | null>(null);
+
+  const openWhatsAppModal = (data?: { title?: string; amount?: number; transactionId?: string }) => {
+    if (data) setWhatsAppModalData(data);
+    setIsWhatsAppModalOpen(true);
+  };
+
+  const closeWhatsAppModal = () => {
+    setIsWhatsAppModalOpen(false);
+  };
 
   const showToast = (msg: string, explicitType?: ToastType) => {
     let type: ToastType = explicitType || 'success';
@@ -676,6 +691,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setOrders((prev) => [newOrder, ...prev]);
+
+    openWhatsAppModal({
+      title: targetCourse.title,
+      amount: newOrder.amountPaid,
+      transactionId: newOrder.transactionId
+    });
 
     // Instantly sync purchase into Supabase purchases & orders database tables
     supabase.createPurchaseRecord({
@@ -1023,7 +1044,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedCourseId,
         toastMessage,
         toastData,
-        showToast
+        showToast,
+        isWhatsAppModalOpen,
+        whatsAppModalData,
+        openWhatsAppModal,
+        closeWhatsAppModal
       }}
     >
       {children}
