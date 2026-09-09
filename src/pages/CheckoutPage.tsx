@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { ShieldCheck, Tag, CheckCircle2, Lock, Flame, Zap, Shield } from 'lucide-react';
 import { openRazorpayCheckout } from '../lib/razorpay';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { WhatsAppGroupModal } from '../components/ui/WhatsAppGroupModal';
 
 export const CheckoutPage: React.FC = () => {
   const {
@@ -18,6 +19,8 @@ export const CheckoutPage: React.FC = () => {
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; percent: number; discountAmount?: number } | null>(null);
   const [userPhone, setUserPhone] = useState(currentUser?.phone || '+91 9876543210');
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [completedPayment, setCompletedPayment] = useState<{ id: string; amount: number } | null>(null);
 
   useEffect(() => {
     if (currentUser?.phone) {
@@ -104,8 +107,12 @@ export const CheckoutPage: React.FC = () => {
             transactionId: paymentData.razorpay_payment_id
           });
           if (success) {
-            showToast(`🎉 Payment Verified & Successful! Payment ID: ${paymentData.razorpay_payment_id}`);
-            setActiveTab('course-learning');
+            showToast(`Payment Verified & Successful! Payment ID: ${paymentData.razorpay_payment_id}`);
+            setCompletedPayment({
+              id: paymentData.razorpay_payment_id,
+              amount: finalPrice
+            });
+            setIsWhatsAppModalOpen(true);
           }
         },
         onError: (err: any) => {
@@ -360,9 +367,18 @@ export const CheckoutPage: React.FC = () => {
             </div>
           </div>
         </div>
-
       </div>
 
+      {/* WhatsApp Group for all further messages Popup */}
+      <WhatsAppGroupModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        onProceed={() => setActiveTab('course-learning')}
+        transactionId={completedPayment?.id}
+        amountPaid={completedPayment?.amount}
+        productTitle={flagship.title}
+        whatsappGroupUrl="https://chat.whatsapp.com/D7KO9Sr39oOJ1RDxM7OvqY"
+      />
     </div>
   );
 };
