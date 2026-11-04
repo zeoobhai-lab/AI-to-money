@@ -14,6 +14,26 @@
   status = 200
 
 [[redirects]]
+  from = "/api/razorpay-webhook"
+  to = "/.netlify/functions/razorpay-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/webhook"
+  to = "/.netlify/functions/razorpay-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/download-product"
+  to = "/.netlify/functions/download-product"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/refund"
+  to = "/.netlify/functions/admin-refund"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

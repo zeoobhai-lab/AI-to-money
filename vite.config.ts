@@ -5,51 +5,112 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-import { createOrder, verifyPayment } from './server/razorpay.ts'
+import {
+  createOrder,
+  verifyPayment,
+  handleWebhook,
+  processRefund,
+  generateSignedDownloadUrl
+} from './server/razorpay.ts'
 
 function razorpayApiPlugin(): Plugin {
   const handler = async (req: any, res: any, next: any) => {
     const url = req.url ? req.url.split('?')[0] : ''
 
-    if (url === '/api/create-order' && req.method === 'POST') {
-      let body = ''
-      req.on('data', (chunk: any) => {
-        body += chunk
+    // Helper to read raw request body
+    const readBody = (): Promise<string> => {
+      return new Promise((resolve) => {
+        let body = ''
+        req.on('data', (chunk: any) => {
+          body += chunk
+        })
+        req.on('end', () => {
+          resolve(body)
+        })
       })
-      req.on('end', async () => {
-        try {
-          const parsed = body ? JSON.parse(body) : {}
-          const result = await createOrder(parsed)
-          res.statusCode = result.status
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(result.body))
-        } catch (err: any) {
-          res.statusCode = 400
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ error: 'Invalid JSON body: ' + err.message }))
-        }
-      })
+    }
+
+    const sendResponse = (status: number, data: any) => {
+      res.statusCode = status
+      res.setHeader('Content-Type', 'application/json')
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Razorpay-Signature, x-razorpay-signature, X-Razorpay-Event-Id')
+      res.end(JSON.stringify(data))
+    }
+
+    if (req.method === 'OPTIONS') {
+      res.statusCode = 204
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Razorpay-Signature, x-razorpay-signature, X-Razorpay-Event-Id')
+      res.end()
       return
     }
 
+    // 1. Create Order
+    if (url === '/api/create-order' && req.method === 'POST') {
+      try {
+        const raw = await readBody()
+        const parsed = raw ? JSON.parse(raw) : {}
+        const result = await createOrder(parsed)
+        sendResponse(result.status, result.body)
+      } catch (err: any) {
+        sendResponse(400, { success: false, error: 'Invalid JSON body: ' + err.message })
+      }
+      return
+    }
+
+    // 2. Verify Payment
     if (url === '/api/verify-payment' && req.method === 'POST') {
-      let body = ''
-      req.on('data', (chunk: any) => {
-        body += chunk
-      })
-      req.on('end', () => {
-        try {
-          const parsed = body ? JSON.parse(body) : {}
-          const result = verifyPayment(parsed)
-          res.statusCode = result.status
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify(result.body))
-        } catch (err: any) {
-          res.statusCode = 400
-          res.setHeader('Content-Type', 'application/json')
-          res.end(JSON.stringify({ error: 'Invalid JSON body: ' + err.message }))
-        }
-      })
+      try {
+        const raw = await readBody()
+        const parsed = raw ? JSON.parse(raw) : {}
+        const result = await verifyPayment(parsed)
+        sendResponse(result.status, result.body)
+      } catch (err: any) {
+        sendResponse(400, { success: false, error: 'Invalid JSON body: ' + err.message })
+      }
+      return
+    }
+
+    // 3. Razorpay Webhook
+    if ((url === '/api/razorpay-webhook' || url === '/api/webhook') && req.method === 'POST') {
+      try {
+        const rawBody = await readBody()
+        const signature = (req.headers['x-razorpay-signature'] || req.headers['X-Razorpay-Signature'] || '').toString()
+        const eventId = (req.headers['x-razorpay-event-id'] || '').toString()
+        const result = await handleWebhook(rawBody, signature, eventId)
+        sendResponse(result.status, result.body)
+      } catch (err: any) {
+        sendResponse(500, { success: false, error: 'Webhook processing error: ' + err.message })
+      }
+      return
+    }
+
+    // 4. Download Product
+    if (url === '/api/download-product' && req.method === 'POST') {
+      try {
+        const raw = await readBody()
+        const parsed = raw ? JSON.parse(raw) : {}
+        const result = await generateSignedDownloadUrl(parsed)
+        sendResponse(result.status, result.body)
+      } catch (err: any) {
+        sendResponse(400, { success: false, error: 'Invalid request: ' + err.message })
+      }
+      return
+    }
+
+    // 5. Admin Refund
+    if (url === '/api/admin/refund' && req.method === 'POST') {
+      try {
+        const raw = await readBody()
+        const parsed = raw ? JSON.parse(raw) : {}
+        const result = await processRefund(parsed)
+        sendResponse(result.status, result.body)
+      } catch (err: any) {
+        sendResponse(400, { success: false, error: 'Invalid request: ' + err.message })
+      }
       return
     }
 

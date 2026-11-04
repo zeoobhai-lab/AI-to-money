@@ -37,7 +37,7 @@ export const CheckoutPage: React.FC = () => {
         }
       });
     }
-  }, [coupons, flagship.currentPrice]);
+  }, [coupons, flagship.currentPrice, validateCoupon, appliedCoupon, flagship.id]);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const scrollRef = useScrollReveal();
@@ -91,8 +91,12 @@ export const CheckoutPage: React.FC = () => {
         },
         notes: {
           courseId: flagship.id,
+          productId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
           couponCode: appliedCoupon?.code || 'NONE',
-          userEmail: currentUser?.email || 'student@example.com'
+          userEmail: currentUser?.email || 'student@example.com',
+          userName: currentUser?.name || 'Student Account',
+          userPhone: userPhone || '+91 9876543210',
+          userId: currentUser?.id || ''
         },
         theme: {
           color: '#8B5CF6'
@@ -100,6 +104,7 @@ export const CheckoutPage: React.FC = () => {
         onSuccess: (paymentData, verifyData) => {
           setIsProcessing(false);
           console.log('Payment verified successfully:', verifyData);
+          setCompletedPayment({ id: paymentData.razorpay_payment_id, amount: finalPrice });
           enrollInCourse(flagship.id, {
             amountPaid: finalPrice,
             couponCode: appliedCoupon?.code,
@@ -250,32 +255,33 @@ export const CheckoutPage: React.FC = () => {
                   <ShieldCheck className="w-6 h-6" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-black text-white flex items-center gap-2">
-                    Online Payment Gateway
-                  </h4>
-                  <p className="text-xs text-gray-300">
-                    Supports GPay, PhonePe, Paytm, BHIM UPI, All Bank Cards, Netbanking & EMI
+                  <h4 className="font-bold text-white text-xs">Official Razorpay Standard Checkout</h4>
+                  <p className="text-[11px] text-gray-300 mt-0.5">
+                    100% Secure 256-bit SSL encrypted transaction powered directly by Razorpay Payment Gateway.
                   </p>
                 </div>
               </div>
-              <div className="pt-2 border-t border-blue-900/50 text-[11px] text-blue-200/80 flex items-center justify-between">
-                <span>🔒 256-Bit SSL Encrypted Payment</span>
-                <span className="font-mono text-emerald-400">Auto Enrolment Active</span>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-blue-500/20 text-center font-mono text-[10px]">
+                <div className="p-2 bg-blue-900/30 rounded-lg text-blue-300">UPI / QR Code</div>
+                <div className="p-2 bg-blue-900/30 rounded-lg text-blue-300">Debit / Credit Cards</div>
+                <div className="p-2 bg-blue-900/30 rounded-lg text-blue-300">Net Banking (50+ Banks)</div>
+                <div className="p-2 bg-blue-900/30 rounded-lg text-blue-300">Cred / Wallets</div>
               </div>
             </div>
           </div>
-
         </div>
 
-        {/* Right: Summary & Coupon */}
+        {/* Right: Price Breakdown & Buy Now */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="glass-panel p-6 rounded-2xl border border-amber-500/30 space-y-5">
-            <h3 className="font-bold text-white text-sm uppercase font-mono tracking-wider text-amber-400">
-              Order Summary
+          <div className="glass-panel p-6 rounded-2xl border border-gray-800 space-y-6 sticky top-24 card-3d reveal">
+            <h3 className="font-bold text-white text-sm uppercase font-mono tracking-wider text-purple-400">
+              Payment Summary
             </h3>
 
+            {/* Coupon Code Section */}
             <form onSubmit={handleApplyCoupon} className="space-y-3">
-              <label className="text-[11px] font-bold text-gray-300 uppercase font-mono flex items-center gap-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase font-mono flex items-center gap-1.5">
                 <Tag className="w-3.5 h-3.5 text-amber-400" /> Apply Coupon Code
               </label>
               <div className="flex gap-2">
@@ -290,21 +296,19 @@ export const CheckoutPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleRemoveCoupon}
-                    className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl hover:bg-red-500/30 transition-colors"
+                    className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold rounded-xl hover:bg-red-500/30 transition-colors cursor-pointer"
                   >
                     Remove
                   </button>
                 ) : (
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-amber-400 text-black text-xs font-black rounded-xl hover:bg-amber-300 transition-colors"
+                    className="px-4 py-2 bg-amber-400 text-black text-xs font-black rounded-xl hover:bg-amber-300 transition-colors cursor-pointer"
                   >
                     Apply
                   </button>
                 )}
               </div>
-
-
 
               {appliedCoupon && (
                 <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center justify-between">
@@ -368,7 +372,7 @@ export const CheckoutPage: React.FC = () => {
         </div>
       </div>
 
-      {/* WhatsApp Group for all further messages Popup */}
+      {/* WhatsApp Group Modal */}
       <WhatsAppGroupModal
         isOpen={isWhatsAppModalOpen}
         onClose={() => setIsWhatsAppModalOpen(false)}
@@ -381,3 +385,5 @@ export const CheckoutPage: React.FC = () => {
     </div>
   );
 };
+
+export default CheckoutPage;
